@@ -6,6 +6,7 @@ import {
   validateToolsInvokeParams,
   type ToolsInvokeResult,
 } from "../protocol/index.js";
+import { ADMIN_SCOPE } from "../operator-scopes.js";
 import { invokeGatewayTool } from "../tools-invoke-shared.js";
 import type { GatewayRequestHandlers } from "./types.js";
 
@@ -30,7 +31,7 @@ function resolveRpcErrorCode(params: {
 }
 
 export const toolsInvokeHandlers: GatewayRequestHandlers = {
-  "tools.invoke": async ({ params, respond, context }) => {
+  "tools.invoke": async ({ params, respond, context, client }) => {
     if (!validateToolsInvokeParams(params)) {
       respond(
         false,
@@ -55,6 +56,7 @@ export const toolsInvokeHandlers: GatewayRequestHandlers = {
     const outcome = await invokeGatewayTool({
       cfg: context.getRuntimeConfig(),
       input: params,
+      senderIsOwner: client?.connect?.scopes?.includes(ADMIN_SCOPE) ? true : undefined,
       toolCallIdPrefix: "rpc",
       approvalMode: params.confirm === true ? "request" : "report",
     });
